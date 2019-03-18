@@ -1,4 +1,5 @@
 import numpy as np
+import queue
 
 
 class ParzenWindowEstimator:
@@ -103,4 +104,33 @@ class KNNEstimator:
     """
     KNN 概率密度估计
     """
-    pass
+
+    class CompareSample():
+        def __init__(self, distance):
+            pass
+
+    def __init__(self):
+        # 样本和标签
+        self.X_train = None
+        self.y_train = None
+        self.dim_features = -1
+        self.num_samples = - 1
+        self.k = -1
+
+    def fit_data(self, X_train, y_train=None):
+        """
+        初始化估计器
+        :param X_train: 训练数据
+        :param y_train: 标签
+        :return: None
+        """
+        assert len(X_train.shape) == 2, '样本必须为列向量构成的矩阵！！！'
+        self.X_train = X_train
+        self.y_train = y_train
+        # 特征维度和样本数
+        self.dim_features, self.num_samples = X_train.shape
+
+    def p(self, X):
+        q = queue.PriorityQueue()
+        # for
+        pass

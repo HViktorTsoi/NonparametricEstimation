@@ -3,7 +3,7 @@ import matplotlib.pylab as plt
 import sklearn.datasets
 from sklearn.decomposition import PCA
 from mpl_toolkits.mplot3d import Axes3D
-from Estimator import ParzenWindowEstimator
+from Estimator import ParzenWindowEstimator, KNNEstimator
 
 
 def make_dataset(dim):
@@ -24,7 +24,7 @@ def make_dataset(dim):
     return X_train, y_train
 
 
-def experiment_1d_data():
+def experiment_1d_parzen():
     # 生成数据集
     X_train, y_train = make_dataset(dim=1)
     # 初始化估计器
@@ -50,7 +50,7 @@ def experiment_1d_data():
     plt.show()
 
 
-def experiment_2d_data():
+def experiment_2d_parzen():
     # 生成数据集
     X_train, y_train = make_dataset(dim=2)
     # 初始化估计器
@@ -73,7 +73,34 @@ def experiment_2d_data():
     plt.show()
 
 
+def experiment_1d_knn():
+    # 生成数据集
+    X_train, y_train = make_dataset(dim=1)
+    # 初始化估计器
+    knn_estimator = KNNEstimator()
+    knn_estimator.k = 5
+
+    # 超参数K值
+    knn_estimator.fit_data(X_train)
+
+    # 生成均匀数据空间
+    X = np.arange(0, 8, 0.01)
+    # 计算概率密度
+    Y = [knn_estimator.p(np.array(x)) for x in X]
+    # 可视化
+    plt.gcf().set_size_inches(7, 4)
+    plt.yticks([])
+    plt.plot(X, Y, label='Density')
+
+    # 绘制原始数据点
+    plt.scatter(X_train, np.zeros(X_train.shape), c='r', label='Train Samples')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
     # 二维数据集测试
-    # experiment_2d_data()
-    experiment_1d_data()
+    # experiment_2d_parzen()
+    # experiment_1d_parzen()
+    experiment_1d_knn()
