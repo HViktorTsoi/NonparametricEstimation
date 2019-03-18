@@ -112,14 +112,13 @@ class ParzenWindowEstimator:
         """
         # 窗宽
         Hn = self.window_size / np.sqrt(self.num_samples)
-        # 超立方体体积
-        Vn = np.power(Hn, self.dim_features)
         # 转换为列向量 求核函数累积
         Px = 1 / self.num_samples * sum(
             self.kernel(X.reshape(-1, 1), self.X_train[:, idx].reshape(-1, 1), Hn)
             # 1 / Vn * kernel(X.reshape(-1, 1), self.X_train[:, idx].reshape(-1, 1), Hn)
             for idx in range(self.num_samples)
         )
+        print('X:', X, '概率密度:', Px)
         return Px
 
 

@@ -11,28 +11,45 @@ def make_dataset(dim):
     :dim: 特征维度
     :return: X Y
     """
-    # 载入数据集
-    dataset = sklearn.datasets.load_iris()
-    # 降到需要的维度
-    # dataset['data'] = PCA(n_components=dim).fit_transform(dataset['data'])
-    X_train = dataset['data'].T[2:2 + dim, :]
-    # 如果只有1维 强制转换为列向量 使计算过程统一
-    if len(X_train.shape) == 1:
-        X_train.reshape(1, X_train.shape[0])
-    y_train = dataset['target']
-    return X_train, y_train
+    if dim == 1:
+        SIZE = 40000
+        X = np.hstack([
+            np.random.normal(loc=2, scale=0.6, size=SIZE),
+            np.random.normal(loc=8, scale=1.5, size=SIZE),
+            np.random.normal(loc=12, scale=1.1, size=SIZE),
+        ])
+        # 绘制GrounTruth分布
+        dist, edges = np.histogram(X, bins=60)
+        plt.plot(edges[:-1], dist / len(X))
+        plt.gcf().set_size_inches(7, 4)
+        plt.show()
+        # 返回X
+        return X.reshape(1, -1), None
+    elif dim == 2:
+        # 载入数据集
+        dataset = sklearn.datasets.load_iris()
+        # 降到需要的维度
+        # dataset['data'] = PCA(n_components=dim).fit_transform(dataset['data'])
+        X_train = dataset['data'].T[2:2 + dim, :]
+        # 如果只有1维 强制转换为列向量 使计算过程统一
+        if len(X_train.shape) == 1:
+            X_train.reshape(1, X_train.shape[0])
+        y_train = dataset['target']
+        return X_train, y_train
 
 
 def experiment_1d_parzen():
     # 生成数据集
     X_train, y_train = make_dataset(dim=1)
-
+    # 随机抽取
+    indices = np.random.choice(X_train.shape[1], 500, replace=False)
+    X_train = X_train[:, indices]
     # 初始化估计器
     pw_estimator = ParzenWindowEstimator() \
-        .fit_data(X_train, window_size=1, kernel_type=ParzenWindowEstimator.KERNEL_TYPE_GAU)
+        .fit_data(X_train, window_size=5, kernel_type=ParzenWindowEstimator.KERNEL_TYPE_GAU)
 
     # 生成均匀数据空间
-    X = np.arange(0, 8, 0.01)
+    X = np.arange(np.min(X_train), np.max(X_train), 0.05)
     # 计算概率密度
     Y = [pw_estimator.p(np.array(x)) for x in X]
     # 可视化
@@ -71,13 +88,17 @@ def experiment_2d_parzen():
 def experiment_1d_knn():
     # 生成数据集
     X_train, y_train = make_dataset(dim=1)
+    # 随机抽取
+    indices = np.random.choice(X_train.shape[1], 400, replace=False)
+    X_train = X_train[:, indices]
+
     # 初始化估计器
     knn_estimator = KNNEstimator()
     # 超参数K值
-    knn_estimator.fit_data(X_train, Kn=15)
+    knn_estimator.fit_data(X_train, Kn=50)
 
     # 生成均匀数据空间
-    X = np.arange(0, 8, 0.01)
+    X = np.arange(np.min(X_train), np.max(X_train), 0.01)
     # 计算概率密度
     Y = [knn_estimator.p(np.array(x)) for x in X]
     # 可视化
@@ -115,6 +136,6 @@ def experiment_2d_knn():
 if __name__ == '__main__':
     # 二维数据集测试
     experiment_1d_parzen()
-    experiment_2d_parzen()
-    experiment_1d_knn()
-    experiment_2d_knn()
+    # experiment_2d_parzen()
+    # experiment_1d_knn()
+    # experiment_2d_knn()
