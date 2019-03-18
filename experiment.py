@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pylab as plt
 import sklearn.datasets
-from sklearn.decomposition import PCA
 from mpl_toolkits.mplot3d import Axes3D
 from Estimator import ParzenWindowEstimator, KNNEstimator
 
@@ -29,13 +28,13 @@ def experiment_1d_parzen():
     X_train, y_train = make_dataset(dim=1)
 
     # 初始化估计器
-    pw_estimator = ParzenWindowEstimator()
-    pw_estimator.fit_data(X_train, window_size=2)
+    pw_estimator = ParzenWindowEstimator() \
+        .fit_data(X_train, window_size=1, kernel_type=ParzenWindowEstimator.KERNEL_TYPE_GAU)
 
     # 生成均匀数据空间
     X = np.arange(0, 8, 0.01)
     # 计算概率密度
-    Y = [pw_estimator.p(np.array(x), kernel=pw_estimator.gaussian_kernel) for x in X]
+    Y = [pw_estimator.p(np.array(x)) for x in X]
     # 可视化
     plt.gcf().set_size_inches(7, 4)
     plt.yticks([])
@@ -53,12 +52,12 @@ def experiment_2d_parzen():
     X_train, y_train = make_dataset(dim=2)
 
     # 初始化估计器
-    pw_estimator = ParzenWindowEstimator()
-    pw_estimator.fit_data(X_train, window_size=1)
+    pw_estimator = ParzenWindowEstimator() \
+        .fit_data(X_train, window_size=1, kernel_type=ParzenWindowEstimator.KERNEL_TYPE_GAU)
 
     # 求概率密度分布
     X, Y = np.meshgrid(np.arange(0, 9, 0.1), np.arange(0, 5, 0.1))
-    Z = [pw_estimator.p(np.array(x), kernel=pw_estimator.gaussian_kernel) for x in zip(X.flat, Y.flat)]
+    Z = [pw_estimator.p(np.array(x)) for x in zip(X.flat, Y.flat)]
 
     ax = Axes3D(plt.figure())
     ax.plot_surface(X, Y, np.array(Z).reshape(X.shape), rstride=1, cstride=1, cmap='hot_r')
@@ -115,7 +114,7 @@ def experiment_2d_knn():
 
 if __name__ == '__main__':
     # 二维数据集测试
-    # experiment_2d_parzen()
     experiment_1d_parzen()
-    # experiment_1d_knn()
-    # experiment_2d_knn()
+    experiment_2d_parzen()
+    experiment_1d_knn()
+    experiment_2d_knn()
