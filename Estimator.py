@@ -17,12 +17,12 @@ class ParzenWindowEstimator:
         self.num_samples = - 1
         self.window_size = -1
 
-    def fit_data(self, X_train, y_train=None):
+    def fit_data(self, X_train, y_train=None, window_size=-1):
         """
         初始化估计器
         :param X_train: 训练数据
         :param y_train: 标签
-        :return: None
+        :return: self
         """
         assert len(X_train.shape) == 2, '样本必须为列向量构成的矩阵！！！'
         self.X_train = X_train
@@ -31,6 +31,9 @@ class ParzenWindowEstimator:
         self.dim_features, self.num_samples = X_train.shape
         # 计算协方差
         self.Q = np.cov(X_train).reshape([self.dim_features, self.dim_features])
+        # 计算窗宽
+        self.window_size = window_size
+        return self
 
     def ball_kernel(self, X, Xi, Hn):
         """
@@ -106,8 +109,19 @@ class KNNEstimator:
     """
 
     class CompareSample():
-        def __init__(self, distance):
-            pass
+        """
+        封装样本类 作为优先队列的节点
+        """
+
+        def __init__(self, distance, X):
+            self.distance = distance
+            self.X = X
+
+        def __lt__(self, other):
+            return self.distance < other.distance
+
+        def __str__(self):
+            return '{} - {}'.format(self.distance, self.X)
 
     def __init__(self):
         # 样本和标签
@@ -117,20 +131,48 @@ class KNNEstimator:
         self.num_samples = - 1
         self.k = -1
 
-    def fit_data(self, X_train, y_train=None):
+    def fit_data(self, X_train, y_train=None, Kn=-1):
         """
         初始化估计器
         :param X_train: 训练数据
         :param y_train: 标签
-        :return: None
+        :param k: K值
+        :return: self
         """
         assert len(X_train.shape) == 2, '样本必须为列向量构成的矩阵！！！'
+        assert Kn >= 2, 'Kn不能设置的过小 至少大于等于2'
         self.X_train = X_train
         self.y_train = y_train
         # 特征维度和样本数
         self.dim_features, self.num_samples = X_train.shape
+        # 设置k值
+        # self.k = int(np.ceil(Kn / np.sqrt(self.num_samples)))
+        self.k = Kn
+        return self
 
     def p(self, X):
-        q = queue.PriorityQueue()
-        # for
-        pass
+        # 转换为列向量
+        X = X.reshape(-1, 1)
+        # 以下基本都为numpy的广播运算
+        # 求样本X到全部训练集合的欧式距离
+        all_distance = np.linalg.norm(X - self.X_train, axis=0)
+        # 递增排序之后对应的下标
+        sorted_distance_indices = np.argsort(all_distance)
+        # 获取前k个下标及其对应的样本
+        nearest_k_indices = sorted_distance_indices[:self.k]
+        nearest_k_samples = self.X_train[:, nearest_k_indices]
+        # 找到这k个样本d维特征的最大最小值 相减就得到了超立方体的d个边长
+        max_x = np.max(nearest_k_samples, axis=1)
+        min_x = np.min(nearest_k_samples, axis=1)
+        # 求超棱长
+        edge_lengths = max_x - min_x
+        # 求超体积
+        V = np.prod(edge_lengths)
+        # 防止除0 若出现0则用整个数据集的平均体积代替
+        if V == 0:
+            V = np.prod(
+                np.max(self.X_train, axis=1) - np.min(self.X_train, axis=1)
+            ) / self.num_samples
+        # 求Px
+        Px = (self.k / self.num_samples) / V
+        return Px
