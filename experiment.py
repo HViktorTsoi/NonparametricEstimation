@@ -27,17 +27,15 @@ def make_dataset(dim):
 def experiment_1d_parzen():
     # 生成数据集
     X_train, y_train = make_dataset(dim=1)
+
     # 初始化估计器
     pw_estimator = ParzenWindowEstimator()
-    # 超参数窗体宽度
-    pw_estimator.window_size = 0.2
-
-    pw_estimator.fit_data(X_train)
+    pw_estimator.fit_data(X_train, window_size=2)
 
     # 生成均匀数据空间
     X = np.arange(0, 8, 0.01)
     # 计算概率密度
-    Y = [pw_estimator.p(np.array(x), kernel=pw_estimator.rect_kernel) for x in X]
+    Y = [pw_estimator.p(np.array(x), kernel=pw_estimator.ball_kernel) for x in X]
     # 可视化
     plt.gcf().set_size_inches(7, 4)
     plt.yticks([])
@@ -53,12 +51,10 @@ def experiment_1d_parzen():
 def experiment_2d_parzen():
     # 生成数据集
     X_train, y_train = make_dataset(dim=2)
+
     # 初始化估计器
     pw_estimator = ParzenWindowEstimator()
-    # 超参数窗体宽度
-    pw_estimator.window_size = 5
-
-    pw_estimator.fit_data(X_train)
+    pw_estimator.fit_data(X_train, window_size=1)
 
     # 求概率密度分布
     X, Y = np.meshgrid(np.arange(0, 9, 0.1), np.arange(0, 5, 0.1))
@@ -78,10 +74,8 @@ def experiment_1d_knn():
     X_train, y_train = make_dataset(dim=1)
     # 初始化估计器
     knn_estimator = KNNEstimator()
-    knn_estimator.k = 5
-
     # 超参数K值
-    knn_estimator.fit_data(X_train)
+    knn_estimator.fit_data(X_train, Kn=15)
 
     # 生成均匀数据空间
     X = np.arange(0, 8, 0.01)
@@ -99,8 +93,29 @@ def experiment_1d_knn():
     plt.show()
 
 
+def experiment_2d_knn():
+    # 生成数据集
+    X_train, y_train = make_dataset(dim=2)
+    # 初始化估计器
+    knn_estimator = KNNEstimator()
+    knn_estimator.fit_data(X_train, Kn=15)
+
+    # 求概率密度分布
+    X, Y = np.meshgrid(np.arange(0, 9, 0.1), np.arange(0, 5, 0.1))
+    Z = [knn_estimator.p(np.array(x)) for x in zip(X.flat, Y.flat)]
+
+    ax = Axes3D(plt.figure())
+    ax.plot_surface(X, Y, np.array(Z).reshape(X.shape), rstride=1, cstride=1, cmap='hot_r')
+    ax.scatter(X_train[0, :], X_train[1, :], 1.1 * max(Z) * np.ones([X_train.shape[1]]), label='Train Samples')
+    ax.set_zlabel('Density')
+    ax.set_zticks([])
+    ax.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
     # 二维数据集测试
     # experiment_2d_parzen()
     # experiment_1d_parzen()
-    experiment_1d_knn()
+    # experiment_1d_knn()
+    experiment_2d_knn()
