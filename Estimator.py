@@ -6,6 +6,10 @@ class ParzenWindowEstimator:
     """
     Parzen窗核密度估计方法
     """
+    # 窗类型
+    KERNEL_TYPE_GAU = 0  # 高斯窗
+    KERNEL_TYPE_RECT = 1  # 矩形窗
+    KERNEL_TYPE_BALL = 2  # 超球窗
 
     def __init__(self):
         # 样本和标签
@@ -16,8 +20,9 @@ class ParzenWindowEstimator:
         self.dim_features = -1
         self.num_samples = - 1
         self.window_size = -1
+        self.kernel = None
 
-    def fit_data(self, X_train, y_train=None, window_size=-1):
+    def fit_data(self, X_train, y_train=None, window_size=-1, kernel_type=None):
         """
         初始化估计器
         :param X_train: 训练数据
@@ -38,6 +43,14 @@ class ParzenWindowEstimator:
             self.Q_inv = np.linalg.pinv(self.Q)
         # 计算窗宽
         self.window_size = window_size
+        # 设置kernel
+        if kernel_type == self.KERNEL_TYPE_GAU:
+            self.kernel = self.gaussian_kernel
+        elif kernel_type == self.KERNEL_TYPE_BALL:
+            self.kernel = self.ball_kernel
+        elif kernel_type == self.KERNEL_TYPE_RECT:
+            self.kernel = self.rect_kernel
+        # 返回本身
         return self
 
     def ball_kernel(self, X, Xi, Hn):
@@ -91,7 +104,7 @@ class ParzenWindowEstimator:
         # 保证返回一个浮点数
         return np.squeeze(K)
 
-    def p(self, X, kernel):
+    def p(self, X):
         """
         计算样本X的类条件概率
         :param X:样本X
@@ -103,7 +116,7 @@ class ParzenWindowEstimator:
         Vn = np.power(Hn, self.dim_features)
         # 转换为列向量 求核函数累积
         Px = 1 / self.num_samples * sum(
-            kernel(X.reshape(-1, 1), self.X_train[:, idx].reshape(-1, 1), Hn)
+            self.kernel(X.reshape(-1, 1), self.X_train[:, idx].reshape(-1, 1), Hn)
             # 1 / Vn * kernel(X.reshape(-1, 1), self.X_train[:, idx].reshape(-1, 1), Hn)
             for idx in range(self.num_samples)
         )
@@ -114,21 +127,6 @@ class KNNEstimator:
     """
     KNN 概率密度估计
     """
-
-    class CompareSample():
-        """
-        封装样本类 作为优先队列的节点
-        """
-
-        def __init__(self, distance, X):
-            self.distance = distance
-            self.X = X
-
-        def __lt__(self, other):
-            return self.distance < other.distance
-
-        def __str__(self):
-            return '{} - {}'.format(self.distance, self.X)
 
     def __init__(self):
         # 样本和标签
@@ -153,7 +151,6 @@ class KNNEstimator:
         # 特征维度和样本数
         self.dim_features, self.num_samples = X_train.shape
         # 设置k值
-        # self.k = int(np.ceil(Kn / np.sqrt(self.num_samples)))
         self.k = Kn
         return self
 
