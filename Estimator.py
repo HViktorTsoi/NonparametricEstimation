@@ -29,8 +29,13 @@ class ParzenWindowEstimator:
         self.y_train = y_train
         # 特征维度和样本数
         self.dim_features, self.num_samples = X_train.shape
-        # 计算协方差
+        # 计算协方差和其逆
         self.Q = np.cov(X_train).reshape([self.dim_features, self.dim_features])
+        try:
+            self.Q_inv = np.linalg.inv(self.Q)
+        except Exception as e:
+            # 如果协方差矩阵为奇异矩阵 则使用矩阵的伪逆代替
+            self.Q_inv = np.linalg.pinv(self.Q)
         # 计算窗宽
         self.window_size = window_size
         return self
@@ -78,7 +83,9 @@ class ParzenWindowEstimator:
             * np.linalg.norm(self.Q)
         ) * np.exp(
             -0.5 * np.linalg.multi_dot([
-                (X - Xi).T, np.linalg.inv(self.Q), (X - Xi)
+                (X - Xi).T,
+                self.Q_inv,
+                (X - Xi)
             ]) / Hn ** 2
         )
         # 保证返回一个浮点数

@@ -35,7 +35,7 @@ def experiment_1d_parzen():
     # 生成均匀数据空间
     X = np.arange(0, 8, 0.01)
     # 计算概率密度
-    Y = [pw_estimator.p(np.array(x), kernel=pw_estimator.ball_kernel) for x in X]
+    Y = [pw_estimator.p(np.array(x), kernel=pw_estimator.gaussian_kernel) for x in X]
     # 可视化
     plt.gcf().set_size_inches(7, 4)
     plt.yticks([])
@@ -58,7 +58,7 @@ def experiment_2d_parzen():
 
     # 求概率密度分布
     X, Y = np.meshgrid(np.arange(0, 9, 0.1), np.arange(0, 5, 0.1))
-    Z = [pw_estimator.p(np.array(x), kernel=pw_estimator.ball_kernel) for x in zip(X.flat, Y.flat)]
+    Z = [pw_estimator.p(np.array(x), kernel=pw_estimator.gaussian_kernel) for x in zip(X.flat, Y.flat)]
 
     ax = Axes3D(plt.figure())
     ax.plot_surface(X, Y, np.array(Z).reshape(X.shape), rstride=1, cstride=1, cmap='hot_r')
@@ -116,6 +116,6 @@ def experiment_2d_knn():
 if __name__ == '__main__':
     # 二维数据集测试
     # experiment_2d_parzen()
-    # experiment_1d_parzen()
+    experiment_1d_parzen()
     # experiment_1d_knn()
-    experiment_2d_knn()
+    # experiment_2d_knn()
