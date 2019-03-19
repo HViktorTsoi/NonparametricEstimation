@@ -7,9 +7,9 @@ class ParzenWindowEstimator:
     Parzen窗核密度估计方法
     """
     # 窗类型
-    KERNEL_TYPE_GAU = 0  # 高斯窗
-    KERNEL_TYPE_RECT = 1  # 矩形窗
-    KERNEL_TYPE_BALL = 2  # 超球窗
+    KERNEL_TYPE_GAU = 'Gaussian'  # 高斯窗
+    KERNEL_TYPE_RECT = 'Rectangle'  # 矩形窗
+    KERNEL_TYPE_BALL = 'Ball'  # 超球窗
 
     def __init__(self):
         # 样本和标签

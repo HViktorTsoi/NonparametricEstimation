@@ -3,26 +3,27 @@ import matplotlib.pylab as plt
 import sklearn.datasets
 from mpl_toolkits.mplot3d import Axes3D
 from Estimator import ParzenWindowEstimator, KNNEstimator
+import matplotlib
+
+matplotlib.rcParams['font.size'] = 14
+plt.rcParams['figure.dpi'] = 300
 
 
-def make_dataset(dim):
+def make_dataset(dim, size):
     """
     生成数据集
     :dim: 特征维度
     :return: X Y
     """
     if dim == 1:
-        SIZE = 40000
+        SIZE = size
         X = np.hstack([
             np.random.normal(loc=2, scale=0.6, size=SIZE),
             np.random.normal(loc=8, scale=1.5, size=SIZE),
             np.random.normal(loc=12, scale=1.1, size=SIZE),
         ])
-        # 绘制GrounTruth分布
-        dist, edges = np.histogram(X, bins=60)
-        plt.plot(edges[:-1], dist / len(X))
-        plt.gcf().set_size_inches(7, 4)
-        plt.show()
+        # plt.gcf().set_size_inches(7, 4)
+        # plt.show()
         # 返回X
         return X.reshape(1, -1), None
     elif dim == 2:
@@ -38,30 +39,29 @@ def make_dataset(dim):
         return X_train, y_train
 
 
-def experiment_1d_parzen():
-    # 生成数据集
-    X_train, y_train = make_dataset(dim=1)
+def experiment_1d_parzen(window_size, kernel_type, N):
     # 随机抽取
-    indices = np.random.choice(X_train.shape[1], 500, replace=False)
-    X_train = X_train[:, indices]
+    indices = np.random.choice(X_train_origin.shape[1], N, replace=False)
+    X_train = X_train_origin[:, indices]
     # 初始化估计器
     pw_estimator = ParzenWindowEstimator() \
-        .fit_data(X_train, window_size=5, kernel_type=ParzenWindowEstimator.KERNEL_TYPE_GAU)
+        .fit_data(X_train, window_size=window_size, kernel_type=kernel_type)
 
     # 生成均匀数据空间
-    X = np.arange(np.min(X_train), np.max(X_train), 0.05)
+    X = np.arange(np.min(X_train), np.max(X_train), SAMPLE_SCALE)
     # 计算概率密度
     Y = [pw_estimator.p(np.array(x)) for x in X]
     # 可视化
-    plt.gcf().set_size_inches(7, 4)
     plt.yticks([])
-    plt.plot(X, Y, label='Density')
+    plt.plot(X, Y, 'r', linewidth=2, label='Esti')
 
-    # 绘制原始数据点
-    plt.scatter(X_train, np.zeros(X_train.shape), c='r', label='Train Samples')
+    # 绘制GrounTruth分布
+    dist, edges = np.histogram(X_train_origin, bins=60)
+    plt.plot(edges[:-1], dist * (max(Y) / max(dist)), 'g--', label='GT')
+    plt.legend(loc='upper right', prop={'size': 10})
     plt.ylabel('Density')
-    plt.legend()
-    plt.show()
+    plt.xlabel('X({})'.format(kernel_type))
+    plt.title('N={}  Hn={}'.format(N if N < 1e3 else '∞', window_size))
 
 
 def experiment_2d_parzen():
@@ -115,7 +115,7 @@ def experiment_1d_knn():
 
 def experiment_2d_knn():
     # 生成数据集
-    X_train, y_train = make_dataset(dim=2)
+    X_train, y_train = make_dataset(dim=2, size=300)
     # 初始化估计器
     knn_estimator = KNNEstimator()
     knn_estimator.fit_data(X_train, Kn=15)
@@ -134,8 +134,24 @@ def experiment_2d_knn():
 
 
 if __name__ == '__main__':
-    # 二维数据集测试
-    experiment_1d_parzen()
+    SAMPLE_SCALE = 0.6
+    # parzen窗测试
+    # 生成数据集
+    X_train_origin, y_train = make_dataset(dim=1, size=5000)
+
+    # 高斯窗
+    for kernel_type in [
+        ParzenWindowEstimator.KERNEL_TYPE_RECT,
+        ParzenWindowEstimator.KERNEL_TYPE_BALL,
+        ParzenWindowEstimator.KERNEL_TYPE_GAU,
+    ]:
+        for N in [5, 50, 500, 3000]:
+            plt.gcf().set_size_inches(13, 3.4)
+            for idx, window_size in enumerate([0.1, 2, 10]):
+                plt.subplot(1, 3, idx + 1)
+                experiment_1d_parzen(window_size=window_size, kernel_type=kernel_type, N=N)
+            plt.tight_layout()
+            plt.show()
     # experiment_2d_parzen()
     # experiment_1d_knn()
     # experiment_2d_knn()
