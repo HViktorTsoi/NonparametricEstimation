@@ -140,14 +140,20 @@ if __name__ == '__main__':
     X_train_origin, y_train = make_dataset(dim=1, size=5000)
 
     # 1d Parzen窗
-    for kernel_type in [
+    # 每一类窗宽参数
+    parameters = [
+        [1, 10, 50],
+        [1, 10, 50],
+        [0.1, 2, 10],
+    ]
+    for k_id, kernel_type in enumerate([
         ParzenWindowEstimator.KERNEL_TYPE_RECT,
         ParzenWindowEstimator.KERNEL_TYPE_BALL,
         ParzenWindowEstimator.KERNEL_TYPE_GAU,
-    ]:
+    ]):
         for N in [5, 50, 500, 3000]:
             plt.gcf().set_size_inches(13, 3.4)
-            for idx, window_size in enumerate([0.1, 2, 10]):
+            for idx, window_size in enumerate(parameters[k_id]):
                 plt.subplot(1, 3, idx + 1)
                 experiment_1d_parzen(window_size=window_size, kernel_type=kernel_type, N=N)
             plt.tight_layout()
