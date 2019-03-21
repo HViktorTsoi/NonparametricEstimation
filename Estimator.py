@@ -169,6 +169,10 @@ class KNNEstimator:
         min_x = np.min(nearest_k_samples, axis=1)
         # 求超棱长
         edge_lengths = max_x - min_x
+        # 删除0边长
+        edge_lengths = edge_lengths[np.where(edge_lengths != 0)]
+        if len(edge_lengths) == 0:
+            return 0
         # 求超体积
         V = np.prod(edge_lengths)
         # 防止除0 若出现0则用整个数据集的平均体积代替
